@@ -1,11 +1,8 @@
 ---
 title: "Teste A/B"
-author: "Daniel Lopes"
-date: "25/04/2019"
-output:
-  html_document: default
-  pdf_document: default
+output: html_notebook
 ---
+
 
 **Objetivo**: fazer um Teste A/B para saber se o comportamento do consumidor de uma loja online é alterado quando, após selecionar um item para ser comprado, o consumidor é direcionado de volta para a lista de produtos (controle) ou para a página de checkout (tratamento).
 
