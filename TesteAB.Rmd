@@ -1,0 +1,102 @@
+---
+title: "Teste A/B"
+author: "Daniel Lopes"
+date: "25/04/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+**Objetivo**: fazer um Teste A/B para saber se o comportamento do consumidor de uma loja online é alterado quando, após selecionar um item para ser comprado, o consumidor é direcionado de volta para a lista de produtos (controle) ou para a página de checkout (tratamento).
+
+Carregando a base de dados.
+
+```{r}
+testeab <- read.csv2("C:/Users/Daniel/Desktop/Projetos/Teste AB/dados.csv")
+head(testeab)
+```
+
+Separando os dados entre Controle (Retorno ao Site) e Tratamento (Direcionado ao Checkout) e visualizar a distribuição dos dados.
+
+```{r}
+
+controle <- subset(testeab, testeab$checkout == 0)
+tratamento <- subset(testeab, testeab$checkout == 1)
+summary(controle[3:5])
+summary(tratamento[3:5])
+
+```
+
+Plotando *boxplots* para cada variável.
+
+
+```{r message=FALSE, warning=FALSE}
+
+for (i in testeab[4:5]){
+  cont <- subset(i, testeab$checkout == 0)
+  trat <- subset(i, testeab$checkout == 1)
+  boxplot(cont, trat, 
+        names = c("Retorno ao Site", "Checkout"),
+        col = c("lightblue", "lightgreen"),
+        main = if (i == testeab[4]){
+          "Quantidade de Itens de cada Venda"
+        } else { "Valor Total de cada Venda"
+      })
+}
+
+```
+
+
+## Testes de médias ##
+
+Antes de realizar um teste de médias é necessário verificar se as variâncias são iguais ou diferentes. Assim, se p<0,05 então as variâncias são diferentes.
+
+```{r}
+var.test(controle$itens, tratamento$itens)
+var.test(controle$valor, tratamento$valor)
+```
+
+Os testes indicam que nos dois casos as variancias são diferentes.
+
+Desta forma, os testes de médias devem indicar *var.equal=FALSE*
+
+```{r}
+t.test(controle$itens, tratamento$itens, alternative= "two.sided", conf.level=0.95, var.equal=FALSE)
+
+t.test(controle$valor, tratamento$valor, alternative= "two.sided", conf.level=0.95, var.equal=FALSE)
+```
+
+Podemos afirmar que a *média de itens comprados* e a *média do valor da compra* são diferentes entre os grupos de **controle** e **tratamento**. Enquanto o consumidor que volta para o site compra em média **4.3 produtos**, o consumidor que vai direta para o checkout compra **3.2 produtos**. A maior quantidade de produtos reflete em um maior ticket médio. O grupo que volta para o site tem o **ticket médio de $200** e o grupo que vai para o checkout tem o **ticket médio de $157**.
+
+Contudo, uma informação que não está disponível e é muito importante para a análise é a **porcentagem de conversões**, ou seja, a relação entre consumidores que escolheram um produto e efetivamente compraram o produto. Os gráficos abaixo mostram que apesar de ter uma cesta com menos produtos e um ticket médio inferior, **o grupo de tratamento teve um total de produtos e de gasto maior do que o grupo de controle** em praticamente todos os dias da semana. Levando em conta que os grupos foram separados aleatoriamente, este pode ser um indicador de que enviar os consumidores para o checkout garante que estes, ainda que comprem menos, finalizarão o processo de compra.
+
+
+Plotando gráficos para visualizar a quantidade e o valor das vendas por dia da semana.
+
+
+```{r}
+ven <- xtabs(testeab$valor ~ testeab$checkout + testeab$d)
+barplot(ven,
+     main = "Valor Total de Vendas",
+     ylim = c(0, 25000),
+     names.arg = c("Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"), 
+     col = c("lightblue", "lightgreen"),
+     beside = TRUE)
+legend(1, 25000, c("Retorno ao Site","Checkout"), fill = c("lightblue","lightgreen"), box.lty=0)
+
+```
+
+
+
+```{r}
+qnt <- table(testeab$checkout, testeab$d)
+barplot(qnt,
+     main = "Quantidade de Vendas Concluídas",
+     ylim = c(0,200),
+     names.arg = c("Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"), 
+     col = c("lightblue", "lightgreen"),
+     beside = TRUE)
+legend(1, 200, c("Retorno ao Site","Checkout"), fill = c("lightblue","lightgreen"), box.lty=0)
+
+```
+
